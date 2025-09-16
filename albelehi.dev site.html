@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>albelehi.dev - Portfolio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        /* Base styles and resets */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        :root {
+            --primary: #6C63FF;
+            --secondary: #FF6584;
+            --accent: #36D1DC;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --dark: #1A1A2E;
+            --darker: #0F0F1B;
+            --light: #F5F5F5;
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --gradient2: linear-gradient(135deg, var(--accent), var(--primary));
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-dark: rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            background: var(--darker);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.1), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(255, 101, 132, 0.1), transparent 25%),
+                radial-gradient(circle at 50% 80%, rgba(54, 209, 220, 0.1), transparent 25%);
+        }
+
+        /* Loading animation */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--darker);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .loading-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            filter: url(#gooey);
+        }
+
+        .blob {
+            width: 2rem;
+            height: 2rem;
+            background: rgba(230,230,230,0.85);
+            border-radius: 50%;
+            position: absolute;
+            left: calc(50% - 1rem);
+            top: calc(50% - 1rem);
+            box-shadow: 0 0 1rem rgba(255, 255, 255, 0.25);
+        }
+
+        .blob-2 { animation: animate-to-2 1.5s infinite; }
+        .blob-3 { animation: animate-to-3 1.5s infinite; }
+        .blob-1 { animation: animate-to-1 1.5s infinite; }
+        .blob-4 { animation: animate-to-4 1.5s infinite; }
+        .blob-0 { animation: animate-to-0 1.5s infinite; }
+        .blob-5 { animation: animate-to-5 1.5s infinite; }
+
+        @keyframes animate-to-2 {
+            25%, 75% { transform: translateX(-1.5rem) scale(0.75); }
+            95% { transform: translateX(0rem) scale(1); }
+        }
+
+        @keyframes animate-to-3 {
+            25%, 75% { transform: translateX(1.5rem) scale(0.75); }
+            95% { transform: translateX(0rem) scale(1); }
+        }
+
+        @keyframes animate-to-1 {
+            25% { transform: translateX(-1.5rem) scale(0.75); }
+            50%, 75% { transform: translateX(-4.5rem) scale(0.6); }
+            95% { transform: translateX(0rem) scale(1); }
+        }
+
+        @keyframes animate-to-4 {
+            25% { transform: translateX(1.5rem) scale(0.75); }
+            50%, 75% { transform: translateX(4.5rem) scale(0.6); }
+            95% { transform: translateX(0rem) scale(1); }
+        }
+
+        @keyframes animate-to-0 {
+            25% { transform: translateX(-1.5rem) scale(0.75); }
+            50% { transform: translateX(-4.5rem) scale(0.6); }
+            75% { transform: translateX(-7.5rem) scale(0.5); }
+            95% { transform: translateX(0rem) scale(1); }
+        }
+
+        @keyframes animate-to-5 {
+            25% { transform: translateX(1.5rem) scale(0.75); }
+            50% { transform: translateX(4.5rem) scale(0.6); }
+            75% { transform: translateX(7.5rem) scale(0.5); }
+            95% { transform: translateX(0rem) scale(1); }
+        }
+
+        /* Page transition effect */
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient);
+            z-index: 999;
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Header and Navigation */
+        header {
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .site-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--gradient);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after, nav a.active::after {
+            width: 100%;
+        }
+
+        nav a.active {
+            color: var(--primary);
+        }
+
+        .admin-icon {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .admin-icon:hover {
+            transform: rotate(15deg);
+        }
+
+        /* Hamburger menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 2rem;
+            height: 2rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .hamburger span {
+            width: 2rem;
+            height: 0.25rem;
+            background: var(--light);
+            border-radius: 10px;
+            transition: all 0.3s linear;
+            position: relative;
+            transform-origin: 1px;
+        }
+
+        /* Main content */
+        main {
+            margin-top: 80px;
+            padding: 2rem;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        .hero h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 2px;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            max-width: 700px;
+            margin: 2rem auto;
+            color: #ccc;
+        }
+
+        .typewriter {
+            overflow: hidden;
+            border-right: 0.15em solid var(--primary);
+            white-space: nowrap;
+            margin: 0 auto;
+            letter-spacing: 0.15em;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--primary) }
+        }
+
+        /* Stats section */
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 4rem 0;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 2rem;
+            background: var(--glass);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            flex: 1;
+            min-width: 200px;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            color: #ccc;
+        }
+
+        /* Skills section */
+        .skills {
+            margin: 4rem 0;
+        }
+
+        .skill-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .skill-name {
+            font-weight: 500;
+        }
+
+        .skill-percentage {
+            color: var(--primary);
+        }
+
+        .skill-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .skill-progress {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 5px;
+            width: 0;
+            transition: width 1s ease-in-out;
+        }
+
+        /* Search bar */
+        .search-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            position: relative;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: var(--light);
+            font-size: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ccc;
+        }
+
+        /* Projects grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .project-card {
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            animation: fadeInUp 0.5s ease-out;
+            position: relative;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px) rotate(2deg);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .project-card:hover .project-image {
+            transform: scale(1.1);
+        }
+
+        .project-content {
+            padding: 1.5rem;
+        }
+
+        .project-title {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-description {
+            color: #ccc;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .project-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Contact section */
+        .contact-section {
+            margin: 5rem 0;
+            padding: 3rem;
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 15px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .contact-content {
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .contact-icon {
+            font-size: 2rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Contact form */
+        .contact-form {
+            margin-top: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ccc;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--light);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--gradient);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+        }
+
+        /* Map */
+        #map {
+            height: 300px;
+            margin-top: 2rem;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        /* Admin login modal */
+        .admin-login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .admin-login-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .login-form {
+            background: var(--dark);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(50px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .admin-login-modal.active .login-form {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Admin panel */
+        .admin-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: var(--dark);
+            z-index: 1001;
+            padding: 2rem;
+            overflow-y: auto;
+            transition: right 0.4s ease;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .admin-panel.active {
+            right: 0;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-title {
+            font-size: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close-admin {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Admin tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .admin-tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .admin-tab-content {
+            display: none;
+        }
+
+        .admin-tab-content.active {
+            display: block;
+        }
+
+        .admin-section {
+            margin-bottom: 2rem;
+        }
+
+        .admin-section-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--light);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--light);
+            margin-bottom: 1rem;
+            resize: vertical;
+        }
+
+        .save-btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+        }
+
+        /* Project form in admin */
+        .project-form {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Particle background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--gradient);
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-100vh) rotate(360deg); }
+        }
+
+        /* Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 99;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        /* Scroll progress */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 4px;
+            background: var(--gradient);
+            z-index: 100;
+            transition: width 0.2s ease;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            nav ul {
+                margin-top: 1rem;
+                gap: 1rem;
+                flex-direction: column;
+                display: none;
+            }
+            
+            nav ul.active {
+                display: flex;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .admin-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-info {
+                flex-direction: column;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading animation -->
+    <div id="loading">
+        <div class="loading-center">
+            <div class="loading-container">
+                <div class="blob blob-0"></div>
+                <div class="blob blob-1"></div>
+                <div class="blob blob-2"></div>
+                <div class="blob blob-3"></div>
+                <div class="blob blob-4"></div>
+                <div class="blob blob-5"></div>
+            </div>
+            <p style="margin-top: 2rem;">Loading amazing content...</p>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="svg-filter">
+            <defs>
+                <filter id="gooey">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+                    <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+                    <feBlend in="SourceGraphic" in2="goo" />
+                </filter>
+            </defs>
+        </svg>
+    </div>
+
+    <!-- Page transition effect -->
+    <div class="page-transition"></div>
+
+    <!-- Scroll progress -->
+    <div class="scroll-progress" id="scroll-progress"></div>
+
+    <!-- Back to top button -->
+    <div class="back-to-top" id="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <!-- Particle background -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="logo-container">
+            <div class="logo">AD</div>
+            <h1 class="site-title">albelehi.dev</h1>
+        </div>
+        <button class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav>
+            <ul id="nav-menu">
+                <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+                <li><a href="#" class="nav-link" data-page="projects">Projects</a></li>
+                <li><a href="#" class="nav-link" data-page="contact">Contact</a></li>
+                <li><a href="#" class="admin-icon" id="admin-link"><i class="fas fa-lock"></i></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main content -->
+    <main>
+        <!-- Home Page -->
+        <section id="home" class="page active">
+            <div class="hero">
+                <h1 class="typewriter">Welcome to my world</h1>
+                <p>Discover my projects, skills, and creative journey as a developer. Here you'll find a collection of my work and passion.</p>
+                <div class="search-container">
+                    <input type="text" class="search-bar" id="main-search" placeholder="Search projects...">
+                    <div class="search-icon">🔍</div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="stat-projects">0</div>
+                    <div class="stat-label">est.</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="stat-clients">0</div>
+                    <div class="stat-label">Happy Clients</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="stat-experience">0</div>
+                    <div class="stat-label">Years Experience</div>
+                </div>
+            </div>
+
+            <div class="skills">
+                <h2 class="section-title">My Skills</h2>
+                <div class="skill-item">
+                    <div class="skill-header">
+                        <span class="skill-name">Web Development</span>
+                        <span class="skill-percentage">90%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" data-width="90%"></div>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-header">
+                        <span class="skill-name">UI/UX Design</span>
+                        <span class="skill-percentage">85%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" data-width="85%"></div>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-header">
+                        <span class="skill-name">JavaScript</span>
+                        <span class="skill-percentage">95%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-progress" data-width="95%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Page -->
+        <section id="projects" class="page">
+            <h2 class="section-title">My Projects</h2>
+            <div class="search-container">
+                <input type="text" class="search-bar" id="project-search" placeholder="Search projects...">
+                <div class="search-icon">🔍</div>
+            </div>
+            <div class="projects-grid" id="projects-container">
+                <!-- Projects will be loaded here dynamically -->
+                <div class="no-projects">
+                    <i class="fas fa-folder-open" style="font-size: 5rem; margin-bottom: 2rem; opacity: 0.5;"></i>
+                    <h3>No projects yet</h3>
+                    <p>Projects will appear here once added</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Page -->
+        <section id="contact" class="page">
+            <h2 class="section-title">Contact Me</h2>
+            <div class="contact-section">
+                <div class="contact-content">
+                    <p>Feel free to reach out to me for collaborations, job opportunities, or just to say hello!</p>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope contact-icon"></i>
+                            <div>
+                                <h3>Email</h3>
+                                <p>alialbelehi13@gmail.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone contact-icon"></i>
+                            <div>
+                                <h3>Phone</h3>
+                                <p>01020431552</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-form">
+                        <h3>Send me a message</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Your Name</label>
+                                <input type="text" id="name" placeholder="Enter your name">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Your Email</label>
+                                <input type="email" id="email" placeholder="Enter your email">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <input type="text" id="subject" placeholder="Enter subject">
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" placeholder="Enter your message"></textarea>
+                        </div>
+                        <button class="form-submit" id="send-message">Send Message</button>
+                    </div>
+
+                    <div id="map"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Admin login modal -->
+    <div class="admin-login-modal" id="admin-login">
+        <div class="login-form">
+            <button class="close-modal" id="close-login">×</button>
+            <h2 class="form-title">Admin Login</h2>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter admin username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter admin password">
+            </div>
+            <button class="form-submit" id="login-btn">Login</button>
+        </div>
+    </div>
+
+    <!-- Admin panel -->
+    <div class="admin-panel" id="admin-panel">
+        <div class="admin-header">
+            <h2 class="admin-title">Admin Panel</h2>
+            <button class="close-admin" id="close-admin">×</button>
+        </div>
+
+        <div class="admin-tabs">
+            <div class="admin-tab active" data-tab="projects">Projects</div>
+            <div class="admin-tab" data-tab="credentials">Credentials</div>
+            <div class="admin-tab" data-tab="settings">Settings</div>
+        </div>
+
+        <div class="admin-tab-content active" id="tab-projects">
+            <div class="admin-section">
+                <h3 class="admin-section-title">Add New Project</h3>
+                <div class="project-form">
+                    <div class="form-group">
+                        <label for="project-title">Project Title</label>
+                        <input type="text" id="project-title" placeholder="Enter project title">
+                    </div>
+                    <div class="form-group">
+                        <label for="project-desc">Project Description</label>
+                        <textarea id="project-desc" placeholder="Enter project description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="project-web">Web Link (optional)</label>
+                        <input type="text" id="project-web" placeholder="Enter web URL">
+                    </div>
+                    <div class="form-group">
+                        <label for="project-download">Download Link (optional)</label>
+                        <input type="text" id="project-download" placeholder="Enter download URL">
+                    </div>
+                    <div class="form-group">
+                        <label for="project-image">Project Image</label>
+                        <input type="file" id="project-image" accept="image/*">
+                    </div>
+                    <button class="save-btn" id="add-project">Add Project</button>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h3 class="admin-section-title">Manage Projects</h3>
+                <div id="admin-projects-list">
+                    <!-- Projects will be listed here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-tab-content" id="tab-credentials">
+            <div class="admin-section">
+                <h3 class="admin-section-title">Change Credentials</h3>
+                <div class="form-group">
+                    <label for="new-username">New Username</label>
+                    <input type="text" id="new-username" placeholder="Enter new username">
+                </div>
+                <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" placeholder="Enter new password">
+                </div>
+                <button class="save-btn" id="save-credentials">Save Credentials</button>
+            </div>
+        </div>
+
+        <div class="admin-tab-content" id="tab-settings">
+            <div class="admin-section">
+                <h3 class="admin-section-title">Site Settings</h3>
+                <div class="form-group">
+                    <label for="site-title">Site Title</label>
+                    <input type="text" id="site-title" placeholder="Enter site title">
+                </div>
+                <div class="form-group">
+                    <label for="site-description">Site Description</label>
+                    <textarea id="site-description" placeholder="Enter site description"></textarea>
+                </div>
+                <button class="save-btn" id="save-settings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create particle background
+            function createParticles() {
+                const particlesContainer = document.getElementById('particles');
+                const particleCount = 50;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    
+                    // Random properties
+                    const size = Math.random() * 20 + 5;
+                    const posX = Math.random() * 100;
+                    const posY = Math.random() * 100;
+                    const delay = Math.random() * 15;
+                    const duration = Math.random() * 10 + 15;
+                    
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.left = `${posX}vw`;
+                    particle.style.top = `${posY}vh`;
+                    particle.style.animationDelay = `${delay}s`;
+                    particle.style.animationDuration = `${duration}s`;
+                    
+                    particlesContainer.appendChild(particle);
+                }
+            }
+
+            // Initialize map
+            function initMap() {
+                const map = L.map('map').setView([30.0444, 31.2357], 10); // Cairo coordinates
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                
+                L.marker([30.0444, 31.2357]).addTo(map)
+                    .bindPopup('Hello! I am located here.')
+                    .openPopup();
+            }
+
+            // Simulate loading
+            setTimeout(() => {
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                    createParticles();
+                    initMap();
+                    animateStats();
+                    animateSkills();
+                }, 500);
+            }, 2000);
+
+            // Animate stats counter
+            function animateStats() {
+                const statProjects = document.getElementById('stat-projects');
+                const statClients = document.getElementById('stat-clients');
+                const statExperience = document.getElementById('stat-experience');
+                
+                animateValue(statProjects, 0, 2019, 2000);
+                animateValue(statClients, 0, 24, 2000);
+                animateValue(statExperience, 0, 6, 2000);
+            }
+
+            function animateValue(element, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    element.innerHTML = Math.floor(progress * (end - start) + start);
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+
+            // Animate skills
+            function animateSkills() {
+                const skillBars = document.querySelectorAll('.skill-progress');
+                skillBars.forEach(bar => {
+                    const width = bar.getAttribute('data-width');
+                    bar.style.width = width;
+                });
+            }
+
+            // Initialize data
+            let projects = JSON.parse(localStorage.getItem('projects')) || [];
+            let adminCredentials = JSON.parse(localStorage.getItem('adminCredentials')) || {
+                username: 'admin',
+                password: 'password123'
+            };
+
+            let siteSettings = JSON.parse(localStorage.getItem('siteSettings')) || {
+                title: 'albelehi.dev',
+                description: 'Portfolio Website'
+            };
+
+            // DOM elements
+            const pages = document.querySelectorAll('.page');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const projectsContainer = document.getElementById('projects-container');
+            const adminProjectsList = document.getElementById('admin-projects-list');
+            const adminLoginModal = document.getElementById('admin-login');
+            const adminPanel = document.getElementById('admin-panel');
+            const adminLink = document.getElementById('admin-link');
+            const closeLogin = document.getElementById('close-login');
+            const loginBtn = document.getElementById('login-btn');
+            const closeAdmin = document.getElementById('close-admin');
+            const saveCredentialsBtn = document.getElementById('save-credentials');
+            const addProjectBtn = document.getElementById('add-project');
+            const saveSettingsBtn = document.getElementById('save-settings');
+            const mainSearch = document.getElementById('main-search');
+            const projectSearch = document.getElementById('project-search');
+            const pageTransition = document.querySelector('.page-transition');
+            const hamburger = document.getElementById('hamburger');
+            const navMenu = document.getElementById('nav-menu');
+            const adminTabs = document.querySelectorAll('.admin-tab');
+            const adminTabContents = document.querySelectorAll('.admin-tab-content');
+            const backToTop = document.getElementById('back-to-top');
+            const scrollProgress = document.getElementById('scroll-progress');
+            const sendMessageBtn = document.getElementById('send-message');
+
+            // Initialize the page
+            function initPage() {
+                renderProjects();
+                renderAdminProjects();
+                updateSiteSettings();
+            }
+
+            // Update site settings
+            function updateSiteSettings() {
+                document.title = siteSettings.title;
+                document.querySelector('.site-title').textContent = siteSettings.title;
+            }
+
+            // Render projects
+            function renderProjects(filteredProjects = null) {
+                const projectsToRender = filteredProjects || projects;
+                projectsContainer.innerHTML = '';
+                
+                if (projectsToRender.length === 0) {
+                    projectsContainer.innerHTML = `
+                        <div class="no-projects">
+                            <i class="fas fa-folder-open" style="font-size: 5rem; margin-bottom: 2rem; opacity: 0.5;"></i>
+                            <h3>No projects yet</h3>
+                            <p>Projects will appear here once added</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                projectsToRender.forEach(project => {
+                    const projectCard = document.createElement('div');
+                    projectCard.className = 'project-card';
+                    projectCard.innerHTML = `
+                        <img src="${project.image}" alt="${project.title}" class="project-image">
+                        <div class="project-content">
+                            <h3 class="project-title">${project.title}</h3>
+                            <p class="project-description">${project.description}</p>
+                            <div class="project-links">
+                                ${project.webLink ? `<a href="${project.webLink}" target="_blank" class="btn btn-primary">View Project</a>` : ''}
+                                ${project.downloadLink ? `<a href="${project.downloadLink}" class="btn btn-secondary">Download</a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    projectsContainer.appendChild(projectCard);
+                });
+            }
+
+            // Render admin projects
+            function renderAdminProjects() {
+                adminProjectsList.innerHTML = '';
+                
+                if (projects.length === 0) {
+                    adminProjectsList.innerHTML = '<p>No projects yet.</p>';
+                    return;
+                }
+                
+                projects.forEach((project, index) => {
+                    const projectItem = document.createElement('div');
+                    projectItem.className = 'project-item';
+                    projectItem.innerHTML = `
+                        <div class="project-info">
+                            <h4>${project.title}</h4>
+                            <p>${project.description.substring(0, 50)}...</p>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn-edit" data-index="${index}">Edit</button>
+                            <button class="btn-delete" data-index="${index}">Delete</button>
+                        </div>
+                    `;
+                    adminProjectsList.appendChild(projectItem);
+                });
+                
+                // Add event listeners to edit and delete buttons
+                document.querySelectorAll('.btn-edit').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        editProject(index);
+                    });
+                });
+                
+                document.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        deleteProject(index);
+                    });
+                });
+            }
+
+            // Edit project
+            function editProject(index) {
+                const project = projects[index];
+                document.getElementById('project-title').value = project.title;
+                document.getElementById('project-desc').value = project.description;
+                document.getElementById('project-web').value = project.webLink || '';
+                document.getElementById('project-download').value = project.downloadLink || '';
+                
+                // Change add button to update button
+                const addBtn = document.getElementById('add-project');
+                addBtn.textContent = 'Update Project';
+                addBtn.setAttribute('data-index', index);
+                addBtn.removeEventListener('click', addProjectHandler);
+                addBtn.addEventListener('click', updateProjectHandler);
+            }
+
+            // Update project
+            function updateProjectHandler() {
+                const index = this.getAttribute('data-index');
+                const title = document.getElementById('project-title').value;
+                const description = document.getElementById('project-desc').value;
+                const webLink = document.getElementById('project-web').value;
+                const downloadLink = document.getElementById('project-download').value;
+                
+                if (!title || !description) {
+                    alert('Title and description are required!');
+                    return;
+                }
+                
+                projects[index] = {
+                    title,
+                    description,
+                    webLink: webLink || null,
+                    downloadLink: downloadLink || null,
+                    image: projects[index].image // Keep the same image
+                };
+                
+                localStorage.setItem('projects', JSON.stringify(projects));
+                
+                renderProjects();
+                renderAdminProjects();
+                
+                // Reset form and button
+                resetProjectForm();
+                
+                alert('Project updated successfully!');
+            }
+
+            // Delete project
+            function deleteProject(index) {
+                if (confirm('Are you sure you want to delete this project?')) {
+                    projects.splice(index, 1);
+                    localStorage.setItem('projects', JSON.stringify(projects));
+                    renderProjects();
+                    renderAdminProjects();
+                    alert('Project deleted successfully!');
+                }
+            }
+
+            // Reset project form
+            function resetProjectForm() {
+                document.getElementById('project-title').value = '';
+                document.getElementById('project-desc').value = '';
+                document.getElementById('project-web').value = '';
+                document.getElementById('project-download').value = '';
+                document.getElementById('project-image').value = '';
+                
+                const addBtn = document.getElementById('add-project');
+                addBtn.textContent = 'Add Project';
+                addBtn.removeAttribute('data-index');
+                addBtn.removeEventListener('click', updateProjectHandler);
+                addBtn.addEventListener('click', addProjectHandler);
+            }
+
+            // Page navigation with transition
+            function navigateTo(pageId) {
+                // Start transition animation
+                pageTransition.style.opacity = '1';
+                pageTransition.style.transform = 'translateY(0)';
+                
+                setTimeout(() => {
+                    // Hide all pages
+                    pages.forEach(page => page.classList.remove('active'));
+                    
+                    // Show selected page
+                    document.getElementById(pageId).classList.add('active');
+                    
+                    // Update active nav link
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    document.querySelector(`.nav-link[data-page="${pageId}"]`).classList.add('active');
+                    
+                    // Close mobile menu if open
+                    navMenu.classList.remove('active');
+                    hamburger.classList.remove('active');
+                    
+                    // End transition animation
+                    setTimeout(() => {
+                        pageTransition.style.opacity = '0';
+                        pageTransition.style.transform = 'translateY(100%)';
+                    }, 500);
+                }, 500);
+            }
+
+            // Set up navigation
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pageId = this.getAttribute('data-page');
+                    navigateTo(pageId);
+                });
+            });
+
+            // Hamburger menu toggle
+            hamburger.addEventListener('click', function() {
+                this.classList.toggle('active');
+                navMenu.classList.toggle('active');
+            });
+
+            // Admin tabs
+            adminTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    adminTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show active tab content
+                    adminTabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(`tab-${tabId}`).classList.add('active');
+                });
+            });
+
+            // Search functionality
+            function setupSearch(searchInput, searchFunction) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    searchFunction(searchTerm);
+                });
+            }
+
+            function searchProjects(searchTerm) {
+                if (searchTerm === '') {
+                    renderProjects();
+                    return;
+                }
+                
+                const filteredProjects = projects.filter(project => 
+                    project.title.toLowerCase().includes(searchTerm) || 
+                    project.description.toLowerCase().includes(searchTerm)
+                );
+                
+                renderProjects(filteredProjects);
+            }
+
+            setupSearch(mainSearch, searchProjects);
+            setupSearch(projectSearch, searchProjects);
+
+            // Admin login
+            adminLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                adminLoginModal.classList.add('active');
+            });
+
+            closeLogin.addEventListener('click', function() {
+                adminLoginModal.classList.remove('active');
+            });
+
+            loginBtn.addEventListener('click', function() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                if (username === adminCredentials.username && password === adminCredentials.password) {
+                    adminLoginModal.classList.remove('active');
+                    adminPanel.classList.add('active');
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                } else {
+                    alert('Invalid credentials!');
+                }
+            });
+
+            // Close admin panel
+            closeAdmin.addEventListener('click', function() {
+                adminPanel.classList.remove('active');
+            });
+
+            // Save credentials
+            saveCredentialsBtn.addEventListener('click', function() {
+                const newUsername = document.getElementById('new-username').value;
+                const newPassword = document.getElementById('new-password').value;
+                
+                if (newUsername && newPassword) {
+                    adminCredentials.username = newUsername;
+                    adminCredentials.password = newPassword;
+                    localStorage.setItem('adminCredentials', JSON.stringify(adminCredentials));
+                    alert('Credentials updated successfully!');
+                    document.getElementById('new-username').value = '';
+                    document.getElementById('new-password').value = '';
+                } else {
+                    alert('Please fill both fields!');
+                }
+            });
+
+            // Save settings
+            saveSettingsBtn.addEventListener('click', function() {
+                const siteTitle = document.getElementById('site-title').value;
+                const siteDescription = document.getElementById('site-description').value;
+                
+                siteSettings.title = siteTitle || siteSettings.title;
+                siteSettings.description = siteDescription || siteSettings.description;
+                
+                localStorage.setItem('siteSettings', JSON.stringify(siteSettings));
+                updateSiteSettings();
+                
+                alert('Settings updated successfully!');
+            });
+
+            // Add project handler
+            function addProjectHandler() {
+                const title = document.getElementById('project-title').value;
+                const description = document.getElementById('project-desc').value;
+                const webLink = document.getElementById('project-web').value;
+                const downloadLink = document.getElementById('project-download').value;
+                const imageInput = document.getElementById('project-image');
+                
+                if (!title || !description) {
+                    alert('Title and description are required!');
+                    return;
+                }
+                
+                let imageUrl = 'https://via.placeholder.com/300x200?text=Project+Image';
+                
+                if (imageInput.files && imageInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imageUrl = e.target.result;
+                        addProjectToStorage(title, description, webLink, downloadLink, imageUrl);
+                    };
+                    reader.readAsDataURL(imageInput.files[0]);
+                } else {
+                    addProjectToStorage(title, description, webLink, downloadLink, imageUrl);
+                }
+            }
+
+            function addProjectToStorage(title, description, webLink, downloadLink, imageUrl) {
+                const newProject = {
+                    title,
+                    description,
+                    webLink: webLink || null,
+                    downloadLink: downloadLink || null,
+                    image: imageUrl
+                };
+                
+                projects.push(newProject);
+                localStorage.setItem('projects', JSON.stringify(projects));
+                
+                renderProjects();
+                renderAdminProjects();
+                
+                // Reset form
+                resetProjectForm();
+                
+                alert('Project added successfully!');
+            }
+
+            // Set up add project button
+            addProjectBtn.addEventListener('click', addProjectHandler);
+
+            // Back to top button
+            window.addEventListener('scroll', function() {
+                const scrollY = window.scrollY;
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                
+                // Show/hide back to top button
+                if (scrollY > 300) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+                
+                // Update scroll progress
+                const scrollPercent = (scrollY / (documentHeight - windowHeight)) * 100;
+                scrollProgress.style.width = `${scrollPercent}%`;
+            });
+
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Contact form submission
+            sendMessageBtn.addEventListener('click', function() {
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const subject = document.getElementById('subject').value;
+                const message = document.getElementById('message').value;
+                
+                if (!name || !email || !subject || !message) {
+                    alert('Please fill all fields!');
+                    return;
+                }
+                
+                // Simulate form submission
+                this.textContent = 'Sending...';
+                this.disabled = true;
+                
+                setTimeout(() => {
+                    alert('Message sent successfully!');
+                    document.getElementById('name').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('subject').value = '';
+                    document.getElementById('message').value = '';
+                    
+                    this.textContent = 'Send Message';
+                    this.disabled = false;
+                }, 2000);
+            });
+
+            // Initialize the page
+            initPage();
+        });
+    </script>
+</body>
+</html>
